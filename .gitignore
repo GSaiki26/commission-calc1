@@ -1,6 +1,8 @@
 # Folders
 .env
+__pycache__
 
 # Files
 *.env
 .dockerignore
+*.xlsx

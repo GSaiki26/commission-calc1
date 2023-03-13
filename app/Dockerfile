@@ -1,19 +1,22 @@
 # Basics.
-FROM python:3.10-alpine
+FROM python:3.10-buster
 WORKDIR /app
 
 # Update the container.
-RUN apk update
-RUN apk upgrade
+RUN apt-get update
+RUN apt-get upgrade -y
 
 # Create the user.
-RUN adduser -D user
+RUN useradd -m user
 RUN chown -R user /app
 
 # Install the packages.
 USER user
 COPY --chown=user requirements.txt ./
 RUN pip3 install -r requirements.txt
+
+# Copy the public folder
+COPY --chown=user public ./public
 
 # Copy the project
 COPY --chown=user src ./src
