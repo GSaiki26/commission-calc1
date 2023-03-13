@@ -75,6 +75,6 @@ class DfModel:
             'Total': total,
             '% Desconto': '0%',
             'Total com desconto': total_des,
-            '% Comissão': f'{environ.get("VENDA_COMISSAO")}%',
+            '% Comissão': f'{environ.get("VENDA_COMISSAO", 0)}%',
             'Total com comissão': total_com
         }
