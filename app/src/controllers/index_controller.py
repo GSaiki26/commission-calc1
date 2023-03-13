@@ -1,16 +1,18 @@
 # Libs
 # from datetime import datetime
 # from os import environ
+from logging import Logger
 
-from flask import render_template
+from flask import redirect
 
 # from models.df_model import DfModel
+from models.contaazul_model import ContaazulModel
 
 
 # Classes
 class IndexController:
     @staticmethod
-    def get():
+    def get(logger: Logger):
         '''
             GET /
         '''
@@ -23,4 +25,4 @@ class IndexController:
         #     'sale_type': environ.get('VENDA_PRATELEIRA').replace('.', ','),
         # }, 1)
         # DfModel.write_to_file(df)
-        return render_template('index.html')
+        return redirect(ContaazulModel.get_auth_url())

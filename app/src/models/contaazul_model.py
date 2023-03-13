@@ -13,7 +13,7 @@ class ContaazulModel:
 
     def __init__(self, logger: Logger) -> None:
         self.token: str = ''
-        self.__logger = logger
+        self.logger = logger
         self.__client_secret = environ.get('CLIENT_SECRET')
 
     def get_token(self, auth_code: str) -> bool:
@@ -23,9 +23,10 @@ class ContaazulModel:
             retrieve the token.
         '''
         # Create the app basic base64.
-        base64 = b64encode(f'{self.client_id}:{self.__client_secret}')
+        to_encode = f'{self.client_id}:{self.__client_secret}'.encode('ascii')
+        base64 = b64encode(to_encode).decode('ascii')
         headers = {
-            'Authorization': f'Basic {base64.decode("utf-8")}'
+            'Authorization': f'Basic {base64}'
         }
 
         url = (
@@ -39,10 +40,12 @@ class ContaazulModel:
         try:
             res = r.post(url, headers=headers)
             res.raise_for_status()
-            self.token: str = res.json().access_token
+
+            self.token: str = res.json().get('access_token')
+            self.logger.info(f'Token: "{self.token}"')
             return True
         except r.HTTPError as err:
-            self.__logger.error(f'An error was raised. Error: {err}')
+            self.logger.error(f'An error was raised. Error: {err}')
             return False
 
     @staticmethod
@@ -50,10 +53,8 @@ class ContaazulModel:
         '''
             A method to return the authorization step url.
         '''
-        state = 'sales'
-
         return (
             f'{environ.get("CONTAAZUL_API")}'
             f'/auth/authorize?redirect_uri={ContaazulModel.redirect_uri}'
-            f'&client_id={ContaazulModel.client_id}&scope=sales&state={state}'
+            f'&client_id={ContaazulModel.client_id}&scope=sales&state=142'
         )

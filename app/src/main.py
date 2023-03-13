@@ -5,6 +5,7 @@ from pathlib import Path
 from flask import Flask
 
 from controllers.index_controller import IndexController
+from controllers.report_controller import ReportController
 
 # Data
 app = Flask(
@@ -17,7 +18,12 @@ app = Flask(
 # Routes
 @app.route('/', methods=['GET'])
 def get_index():
-    return IndexController.get()
+    return IndexController.get(app.logger)
+
+
+@app.route('/report', methods=['GET'])
+def get_report():
+    return ReportController.get(app.logger)
 
 
 # Functions
