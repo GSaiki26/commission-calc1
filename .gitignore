@@ -1,0 +1,6 @@
+# Folders
+.env
+
+# Files
+*.env
+.dockerignore
