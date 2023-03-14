@@ -40,7 +40,9 @@ class ReportController:
         sales = sales_model.get_period_sales()
 
         sales.sort(
-            key=lambda sale: (sale['seller']['name'], sale['ca_id']),
+            key=lambda sale: (
+                sale['seller']['name'],
+                dt.fromisoformat(sale["emission"][:-1] + '+00:00').strftime()),
             reverse=True if environ.get('REVERSE') == "True" else False
         )
 
