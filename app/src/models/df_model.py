@@ -17,6 +17,7 @@ class DfModel:
         # Create the basic dataframe template.
         columns = {
             'Data': pd.Series(dtype=str),
+            'Vendedor': pd.Series(dtype=str),
             'Venda': pd.Series(dtype=int),
             'Cliente': pd.Series(dtype=str),
             'Valor': pd.Series(dtype=float),
@@ -38,11 +39,14 @@ class DfModel:
         '''
         # Get env variables.
         output_folder = Path(environ.get('OUTPUT_FOLDER', './data'))
-        init_date = environ.get('DATA_INICIO')
-        end_date = environ.get('DATA_FIM')
+        init_dt = dt.strptime(environ.get('DATA_INICIO'), '%d/%m/%Y')
+        end_dt = dt.strptime(environ.get('DATA_FIM'), '%d/%m/%Y')
+        init_date = init_dt.strftime('%d-%m-%Y')
+        end_date = end_dt.strftime('%d-%m-%Y')
 
         # Treat the date.
         df['Data'] = df['Data'].dt.strftime('%m/%d/%Y')
+        df = df.sort_values('Vendedor')
 
         # Write into a file.
         output_path = Path(
@@ -68,9 +72,10 @@ class DfModel:
 
         return {
             'Data': entry.get('date'),
+            'Vendedor': entry.get('seller'),
             'Venda': entry.get('sale'),
             'Cliente': entry.get('client'),
-            'Valor': entry.get('value'),
+            'Valor': f'=ROUND({entry.get("value")}; 2)',
             '% Tipo de Venda': f'{entry.get("sale_type")}%',
             'Total': total,
             '% Desconto': '0%',

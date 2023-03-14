@@ -18,12 +18,12 @@ app = Flask(
 # Routes
 @app.route('/', methods=['GET'])
 def get_index():
-    return IndexController.get(app.logger)
+    return IndexController.get()
 
 
 @app.route('/report', methods=['GET'])
 def get_report():
-    return ReportController.get(app.logger)
+    return ReportController.get()
 
 
 # Functions

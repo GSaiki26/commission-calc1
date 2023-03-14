@@ -1,7 +1,6 @@
 # Libs
 from os import environ
 from base64 import b64encode
-from logging import Logger
 
 import requests as r
 
@@ -11,9 +10,8 @@ class ContaazulModel:
     redirect_uri = environ.get('REDIRECT_URI')
     client_id = environ.get('CLIENT_ID')
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self) -> None:
         self.token: str = ''
-        self.logger = logger
         self.__client_secret = environ.get('CLIENT_SECRET')
 
     def get_token(self, auth_code: str) -> bool:
@@ -42,7 +40,7 @@ class ContaazulModel:
             res.raise_for_status()
 
             self.token: str = res.json().get('access_token')
-            self.logger.info(f'Token: "{self.token}"')
+            print(f'Token: "{self.token}"')
             return True
         except r.HTTPError as err:
             self.logger.error(f'An error was raised. Error: {err}')
