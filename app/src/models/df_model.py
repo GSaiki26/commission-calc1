@@ -1,10 +1,9 @@
 # Libs
 from datetime import datetime as dt
 from os import environ
-from pathlib import Path
 
 import pandas as pd
-from pandas import DataFrame, ExcelWriter
+from pandas import DataFrame
 
 
 # Classes
@@ -33,31 +32,15 @@ class DfModel:
         return df
 
     @staticmethod
-    def write_to_file(df: DataFrame) -> None:
+    def get_sheet_name() -> str:
         '''
-            A method to write the dataframe to a file.
+            A method to get the sheet name.
         '''
-        # Get env variables.
-        output_folder = Path(environ.get('OUTPUT_FOLDER', './data'))
         init_dt = dt.strptime(environ.get('DATA_INICIO'), '%d/%m/%Y')
         end_dt = dt.strptime(environ.get('DATA_FIM'), '%d/%m/%Y')
         init_date = init_dt.strftime('%d-%m-%Y')
         end_date = end_dt.strftime('%d-%m-%Y')
-
-        # Treat the date.
-        df['Data'] = df['Data'].dt.strftime('%m/%d/%Y')
-        df = df.sort_values('Vendedor')
-
-        # Write into a file.
-        output_path = Path(
-            f'{output_folder.absolute()}/comissao_{dt.now().date()}.xlsx')
-
-        # Get the file mode
-        with ExcelWriter(output_path, 'openpyxl', mode='w') as xl_writer:
-            df.to_excel(
-                xl_writer,
-                f'{init_date}-{end_date}',
-                engine='openpyxl', index=False)
+        return f'{init_date} --- {end_date}'
 
     @staticmethod
     def format_entry(entry: dict[str, any], row: int) -> dict[str, any]:

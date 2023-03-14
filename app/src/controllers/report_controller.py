@@ -1,8 +1,10 @@
 # Libs
 from datetime import datetime as dt
+import io
 from os import environ
 
-from flask import request, redirect, make_response
+from flask import request, redirect, Response
+from pandas import DataFrame, ExcelWriter
 
 from models.contaazul_model import ContaazulModel
 from models.product_model import ProductModel
@@ -26,7 +28,7 @@ class ReportController:
         contaazul = ContaazulModel()
         if not (contaazul.get_token(auth)):
             print('Couldn\'t get the auth token...')
-            return make_response({
+            return Response({
                 'status': 'error',
                 'message': 'Couldn\'t retrieve the token.'
             }, 500)
@@ -34,43 +36,56 @@ class ReportController:
         # Get sales
         sales_model = SalesModel(contaazul.token)
         sales = sales_model.get_period_sales()
-        product_model = ProductModel(contaazul.token)
+        prod_model = ProductModel(contaazul.token)
 
         # Check the products from all sales.
         df = DfModel.create_template()
-        print(len(sales))
         for index, sale in enumerate(sales):
-            print(f'Testing sale #{sale["number"]}...')
+            print(f'Testing sale #{sale["number"]}/{len(sale)}...')
+            ReportController.add_sale_to_df(df, prod_model, sale, index)
 
-            # Check if all produts are internal.
-            products = product_model.get_products_from_sale(sale['id'])
-            if (ReportController.are_all_products_internal(products)):
-                print('The sale is internal.')
-                sale['sale_type'] = environ.get('VENDA_INTERNA')
-            else:
-                print('The sale is not internal.')
-                sale['sale_type'] = environ.get('VENDA_PRATELEIRA')
+        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+        df = df.sort_values('Vendedor')
 
-            # Add the sale to the excel file.
-            date = dt.fromisoformat(sale["emission"][:-1] + '+00:00')
-            df.loc[len(df)] = DfModel.format_entry({
-                'date': date,
-                'seller': sale['seller']['name'],
-                'sale': sale['number'],
-                'client': sale['customer']['name'],
-                'value': sale['total'],
-                'sale_type': sale['sale_type'].replace('.', ','),
-            }, index + 1)
+        # Send the df to the buffer.
+        buffer = io.BytesIO()
+        with ExcelWriter(buffer, 'openpyxl', mode='w') as writer:
+            df.to_excel(writer, DfModel.get_sheet_name())
 
-        print(df)
+        # Return to the client.
+        return Response(
+            buffer.getvalue(), mimetype='application/vnd.ms-excel',
+            headers={
+                'Content-Disposition': 'attachment; filename=output.xlsx',
+                'Content-type': 'application/vnd.ms-excel'
+            })
 
-        DfModel.write_to_file(df)
+    @staticmethod
+    def add_sale_to_df(
+            df: DataFrame, prod_model: ProductModel,
+            sale: dict[str, any], index: int) -> None:
+        '''
+            Add the sale to the dataframe.
+        '''
+        # Check if all produts are internal.
+        products = prod_model.get_products_from_sale(sale['id'])
+        if (ReportController.are_all_products_internal(products)):
+            print('The sale is internal.\n\n')
+            sale['sale_type'] = environ.get('VENDA_INTERNA')
+        else:
+            print('The sale is not internal.\n\n')
+            sale['sale_type'] = environ.get('VENDA_PRATELEIRA')
 
-        # Return the index.
-        return make_response({
-            'status': 'success',
-            'message': "Success on getting the token."
-        }, 200)
+        # Add the sale to the excel file.
+        date = dt.fromisoformat(sale["emission"][:-1] + '+00:00')
+        df.loc[len(df)] = DfModel.format_entry({
+            'date': date,
+            'seller': sale['seller']['name'],
+            'sale': sale['number'],
+            'client': sale['customer']['name'],
+            'value': sale['total'],
+            'sale_type': sale['sale_type'].replace('.', ','),
+        }, index + 1)
 
     @staticmethod
     def are_all_products_internal(products: list[dict[str, any]]) -> bool:

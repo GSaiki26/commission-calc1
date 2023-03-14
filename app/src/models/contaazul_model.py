@@ -40,7 +40,6 @@ class ContaazulModel:
             res.raise_for_status()
 
             self.token: str = res.json().get('access_token')
-            print(f'Token: "{self.token}"')
             return True
         except r.HTTPError as err:
             self.logger.error(f'An error was raised. Error: {err}')
