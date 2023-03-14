@@ -1,8 +1,8 @@
 version: '3.9'
 
 services:
-    commision-calc:
-      container_name: commision-calc
+    commission-calc:
+      container_name: commission-calc
       build: ./app
       env_file:
         - app.env
