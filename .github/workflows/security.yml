@@ -22,3 +22,5 @@ jobs:
 
       - name: Check linter
         uses: py-actions/flake8@v2
+        with:
+          path: app
