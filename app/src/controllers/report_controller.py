@@ -40,24 +40,38 @@ class ReportController:
         sales = sales_model.get_period_sales()
 
         sales.sort(
-            key=lambda sale: (sale['seller']['name'], sale['ca_id']),
+            key=lambda sale: (
+                sale['seller']['name'],
+                dt.fromisoformat(sale["emission"][:-1] + '+00:00').strftime()),
             reverse=True if environ.get('REVERSE') == "True" else False
         )
 
-        # Check the products from all sales.
-        df = DfModel.create_template()
-        for index, sale in enumerate(sales):
-            sale_numb = f'({index+1}/{len(sales)})'
-            print(f'Testing sale #{sale["number"]} {sale_numb}...')
-            ReportController.add_sale_to_df(df, prod_model, sale, index)
+        # Split the sales into differents seller.
+        sales = ReportController.split_sales_by_seller(sales)
 
-        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
-        # df = df.sort_values(['Vendedor', 'Data'])
+        # Check the products from all sales.
+        for seller in sales:
+            print(f'Calculating the seller: {seller}')
+            for index, sale in enumerate(sales[seller]['sales']):
+                sale_numb = f'({index+1}/{len(sales[seller]["sales"])})'
+                print(f'Testing sale #{sale["number"]} {sale_numb}...')
+                ReportController.add_sale_to_df(
+                    sales[seller]['df'], prod_model, sale, index)
+
+            sales[seller]['df']['Data'] = (
+                sales[seller]['df']['Data'].dt.strftime('%d/%m/%Y')
+            )
+            sales_len = len(sales[seller]['df'])
+            sales[seller]['df'].loc[sales_len] = {
+                'Total com comissão': f'=ROUND(SUMA(K2:k{sales_len + 1  }); 2)'
+            }
 
         # Send the df to the buffer.
         buffer = io.BytesIO()
         with ExcelWriter(buffer, 'openpyxl', mode='w') as writer:
-            df.to_excel(writer, DfModel.get_sheet_name(), index=False)
+            for seller in sales.keys():
+                sales[seller]['df'].to_excel(
+                    writer, sheet_name=seller, index=False)
 
         # Return to the client.
         return Response(
@@ -106,3 +120,23 @@ class ReportController:
                 return False
 
         return True
+
+    @staticmethod
+    def split_sales_by_seller(
+            sales: list[dict[str, any]]
+            ) -> dict[str, dict[str, list[dict[str, any]]]]:
+        '''
+            A method to split the sales by seller.
+        '''
+        sales_by_seller: dict[str, dict[str, list[dict[str, any]]]] = {}
+
+        for sale in sales:
+            seller: str = sale['seller']['name']
+            if not (seller in sales_by_seller):
+                sales_by_seller[seller] = {
+                    'sales': [],
+                    'df': DfModel.create_template()
+                }
+            sales_by_seller[seller]['sales'].append(sale)
+
+        return sales_by_seller
