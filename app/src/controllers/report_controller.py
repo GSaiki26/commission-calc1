@@ -56,7 +56,7 @@ class ReportController:
         return Response(
             buffer.getvalue(), mimetype='application/vnd.ms-excel',
             headers={
-                'Content-Disposition': 'attachment; filename=output.xlsx',
+                'Content-Disposition': 'attachment; filename=result.xlsx',
                 'Content-type': 'application/vnd.ms-excel'
             })
 
