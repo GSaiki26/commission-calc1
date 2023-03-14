@@ -1,0 +1,24 @@
+name: Security
+
+on:
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  check_for_security_issues:
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+        os: ["ubuntu-22.04"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check packages
+        uses: pypa/gh-action-pip-audit@v1.0.0
+        with:
+          inputs: app/requirements.txt
+
+      - name: Check linter
+        uses: py-actions/flake8@v2
