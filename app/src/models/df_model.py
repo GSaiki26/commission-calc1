@@ -16,9 +16,9 @@ class DfModel:
         # Create the basic dataframe template.
         columns = {
             'Data': pd.Series(dtype=str),
-            'Vendedor': pd.Series(dtype=str),
             'Venda': pd.Series(dtype=int),
             'Cliente': pd.Series(dtype=str),
+            'Vendedor': pd.Series(dtype=str),
             'Valor': pd.Series(dtype=float),
             '% Tipo de Venda': pd.Series(dtype=float),
             'Total': pd.Series(dtype=float),
@@ -49,9 +49,9 @@ class DfModel:
         '''
         # Format.
         row += 1
-        total = f'= ROUND( D{row} - ( D{row} * E{row} ); 2 )'
-        total_des = f'=ROUND( F{row} - ( F{row} * G{row} ); 2 )'
-        total_com = f'=ROUND( H{row} * ( I{row} ); 2 )'
+        total = f'= ROUND( E{row} - ( E{row} * F{row} ); 2 )'
+        total_des = f'=ROUND( G{row} - ( G{row} * H{row} ); 2 )'
+        total_com = f'=ROUND( I{row} * ( J{row} ); 2 )'
 
         return {
             'Data': entry.get('date'),

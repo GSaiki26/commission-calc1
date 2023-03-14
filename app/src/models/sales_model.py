@@ -22,7 +22,7 @@ class SalesModel(FeatureModel):
         try:
             print(f'Getting sales from {init_dt} - {end_dt}...')
             url = (
-                f'{self.api_url}/v1/sales?size=999999999'
+                f'{self.api_url}/v1/sales?size={environ.get("SALES_LENGTH")}'
                 f'&emission_start={init_dt.strftime("%Y-%m-%d")}'
                 f'&emission_end={end_dt.strftime("%Y-%m-%d")}'
             )

@@ -35,22 +35,29 @@ class ReportController:
 
         # Get sales
         sales_model = SalesModel(contaazul.token)
-        sales = sales_model.get_period_sales()
         prod_model = ProductModel(contaazul.token)
+
+        sales = sales_model.get_period_sales()
+
+        sales.sort(
+            key=lambda sale: (sale['seller']['name'], sale['ca_id']),
+            reverse=True if environ.get('REVERSE') == "True" else False
+        )
 
         # Check the products from all sales.
         df = DfModel.create_template()
         for index, sale in enumerate(sales):
-            print(f'Testing sale #{sale["number"]}/{len(sale)}...')
+            sale_numb = f'({index+1}/{len(sales)})'
+            print(f'Testing sale #{sale["number"]} {sale_numb}...')
             ReportController.add_sale_to_df(df, prod_model, sale, index)
 
         df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
-        df = df.sort_values('Vendedor')
+        # df = df.sort_values(['Vendedor', 'Data'])
 
         # Send the df to the buffer.
         buffer = io.BytesIO()
         with ExcelWriter(buffer, 'openpyxl', mode='w') as writer:
-            df.to_excel(writer, DfModel.get_sheet_name())
+            df.to_excel(writer, DfModel.get_sheet_name(), index=False)
 
         # Return to the client.
         return Response(
