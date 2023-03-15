@@ -29,3 +29,16 @@ class ProductModel(FeatureModel):
 
         except r.HTTPError as err:
             print(err)
+
+    @staticmethod
+    def are_all_products_internal(products: list[dict[str, any]]) -> bool:
+        '''
+            A method to check if the provided products are internal.
+        '''
+        for product in products:
+            name: str = product['item']['name']
+            print(f'product name: {name}')
+            if (name.lower().find('interno') == -1):
+                return False
+
+        return True
