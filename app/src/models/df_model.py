@@ -5,6 +5,8 @@ from os import environ
 import pandas as pd
 from pandas import DataFrame
 
+from models.product_model import ProductModel
+
 
 # Classes
 class DfModel:
@@ -49,16 +51,16 @@ class DfModel:
         '''
         # Format.
         row += 1
-        total = f'= ROUND( E{row} - ( E{row} * F{row} ); 2 )'
-        total_des = f'=ROUND( G{row} - ( G{row} * H{row} ); 2 )'
-        total_com = f'=ROUND( I{row} * ( J{row} ); 2 )'
+        total = f'= E{row} - ( E{row} * F{row} )'
+        total_des = f'= G{row} - ( G{row} * H{row} )'
+        total_com = f'= I{row} * J{row}'
 
         return {
             'Data': entry.get('date'),
             'Vendedor': entry.get('seller'),
             'Venda': entry.get('sale'),
             'Cliente': entry.get('client'),
-            'Valor': f'=ROUND({entry.get("value")}; 2)',
+            'Valor': f'={entry.get("value")}',
             '% Tipo de Venda': f'{entry.get("sale_type")}%',
             'Total': total,
             '% Desconto': '0%',
@@ -66,3 +68,32 @@ class DfModel:
             '% Comissão': f'{environ.get("VENDA_COMISSAO", 0)}%',
             'Total com comissão': total_com
         }
+
+    @staticmethod
+    def add_sale_to_df(
+            df: DataFrame, prod_model: ProductModel,
+            sale: dict[str, any], index: int) -> None:
+        '''
+            Add the sale to the dataframe.
+        '''
+        # Get the products from the sale.
+        products = prod_model.get_products_from_sale(sale['id'])
+
+        # Check if all produts are internal.
+        if (ProductModel.are_all_products_internal(products)):
+            print('The sale is internal.\n\n')
+            sale['sale_type'] = environ.get('VENDA_INTERNA')
+        else:
+            print('The sale is not internal.\n\n')
+            sale['sale_type'] = environ.get('VENDA_PRATELEIRA')
+
+        # Add the sale to the excel file.
+        date = dt.fromisoformat(sale["emission"][:-1] + '+00:00')
+        df.loc[len(df)] = DfModel.format_entry({
+            'date': date,
+            'seller': sale['seller']['name'],
+            'sale': sale['number'],
+            'client': sale['customer']['name'],
+            'value': sale['total'],
+            'sale_type': sale['sale_type'].replace(',', '.'),
+        }, index + 1)
