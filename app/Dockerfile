@@ -15,9 +15,6 @@ USER user
 COPY --chown=user requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-# Copy the public folder
-COPY --chown=user public ./public
-
 # Copy the project
 COPY --chown=user src ./src
 
