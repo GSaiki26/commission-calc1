@@ -51,8 +51,8 @@ class DfModel:
         '''
         # Format.
         row += 1
-        total = f'= E{row} - ( E{row} * F{row} )'
-        total_des = f'= G{row} - ( G{row} * H{row} )'
+        total = f'= E{row} / ( F{row} + 1)'
+        total_des = f'= G{row} - ( G{row} * H{row})'
         total_com = f'= I{row} * J{row}'
 
         return {
@@ -95,5 +95,5 @@ class DfModel:
             'sale': sale['number'],
             'client': sale['customer']['name'],
             'value': sale['total'],
-            'sale_type': sale['sale_type'].replace(',', '.'),
+            'sale_type': sale['sale_type'].replace('.', ','),
         }, index + 1)
